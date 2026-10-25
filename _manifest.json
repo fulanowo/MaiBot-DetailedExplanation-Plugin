@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "id": "fulanowo.detailed-explanation",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "name": "麦麦细说 (Detailed Explanation Plugin)",
   "description": "需要详细解释、科普或深入分析时，直连模型生成结构化长文，按段落智能切分后逐段发送，并保留麦麦的人设与表达风格。支持关键词触发、主动命令与模型工具调用。",
   "author": {

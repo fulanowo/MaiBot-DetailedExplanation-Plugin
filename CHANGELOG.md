@@ -1,5 +1,19 @@
 # 更新日志 (Changelog)
 
+## [2.0.1] - 2026-10-26
+
+### 修复 (Fixed)
+- `search_mode = "auto"` 叠加「问题长度 >= 12 字」判据后几乎对任何提问都成立，实际等价于 `always`；现在只按时效/知识性线索词判断，与配置语义一致
+
+### 变更 (Changed)
+- `activation_probability` 从 `[activation]` 移回 `[detailed_explanation]`，与 1.4.2 及更早版本的配置位置一致
+
+### 清理 (Chore)
+- 删除 `segmentation.py` 中 Pydantic 已保证的重复下限钳制
+- 测试统一放进 `tests/`，导入路径收进单个 `tests/conftest.py`
+- `AGENTS.md` 只保留 agent 需要的契约与规范，功能说明链接 README
+- 删除本地残留的 `config.toml` 与 `.vscode/settings.json`（两者已在 `.gitignore` 中，不影响仓库）
+
 ## [2.0.0] - 2026-10-26
 
 ### 破坏性变更 (Breaking)

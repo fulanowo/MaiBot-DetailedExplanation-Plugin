@@ -207,14 +207,13 @@ def split_content_into_segments(
     text = (content or "").strip()
     if not text:
         return []
-    target_length = max(1, segment_length)
-    if len(text) <= target_length:
+    if len(text) <= segment_length:
         return [text]
 
     if algorithm == "sentence":
         segments = sentence_split(
             text,
-            target_length=target_length,
+            target_length=segment_length,
             keep_paragraph_integrity=keep_paragraph_integrity,
             min_paragraph_length=min_paragraph_length,
             sentence_separators=sentence_separators,
@@ -222,14 +221,14 @@ def split_content_into_segments(
     elif algorithm == "length":
         segments = length_split(
             text,
-            target_length=target_length,
+            target_length=segment_length,
             keep_paragraph_integrity=keep_paragraph_integrity,
             min_paragraph_length=min_paragraph_length,
         )
     else:
         segments = smart_split(
             text,
-            target_length=target_length,
+            target_length=segment_length,
             keep_paragraph_integrity=keep_paragraph_integrity,
             min_paragraph_length=min_paragraph_length,
             sentence_separators=sentence_separators,
@@ -238,9 +237,9 @@ def split_content_into_segments(
     segments = [segment for segment in segments if segment.strip()]
     if not segments:
         return [text]
-    if len(segments) < max(1, min_segments):
+    if len(segments) < min_segments:
         return [text]
-    if len(segments) > max(1, max_segments):
+    if len(segments) > max_segments:
         tail = "\n\n".join(segments[max_segments - 1 :])
         segments = segments[: max_segments - 1] + [tail]
     return segments

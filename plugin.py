@@ -114,6 +114,7 @@ class DetailedExplanationSection(PluginConfigBase):
     show_progress: bool = Field(default=True, description="分段消息是否带 (1/3) 形式的进度前缀")
     show_start_hint: bool = Field(default=True, description="生成前是否先发一条开场提示")
     start_hint_message: str = Field(default="让我详细说明一下...", description="开场提示文案")
+    activation_probability: float = Field(default=0.1, ge=0.0, le=1.0, description="random 模式的触发概率")
 
 
 class ActivationSection(PluginConfigBase):
@@ -127,7 +128,6 @@ class ActivationSection(PluginConfigBase):
         default="llm_judge",
         description="llm_judge=由模型决定是否调用工具；keyword=命中关键词直接触发；always=每条消息触发；random=按概率触发；never=只保留手动命令",
     )
-    activation_probability: float = Field(default=0.1, ge=0.0, le=1.0, description="random 模式的触发概率")
     strict_mode: bool = Field(default=False, description="关键词匹配是否区分大小写")
     custom_keywords: list[str] = Field(default_factory=list, description="追加的触发关键词")
 
@@ -324,9 +324,13 @@ def _is_low_value_message(text: str) -> bool:
 
 
 def _needs_search(query: str) -> bool:
-    """auto 模式下判断问题是否涉及时效或事实细节。"""
+    """auto 模式下判断问题是否涉及时效或事实细节。
 
-    return any(hint in query for hint in SEARCH_AUTO_HINTS) or len(query) >= 12
+    只按线索词判断。早先还叠了一条「长度 >= 12」，几乎对任何提问都成立，
+    实际把 auto 档变成 always，与配置语义不符。
+    """
+
+    return any(hint in query for hint in SEARCH_AUTO_HINTS)
 
 
 def _normalize_search_result(result: Any) -> str:
@@ -337,6 +341,7 @@ def _normalize_search_result(result: Any) -> str:
     if isinstance(result, str):
         return result.strip()
     if isinstance(result, dict):
+        # 检索类插件的返回结构互不统一，这些键覆盖了 google_search_plugin / InternetSearchPlugin 的形态
         for key in ("content", "text", "result", "data", "answer", "summary"):
             value = result.get(key)
             if isinstance(value, str) and value.strip():
@@ -684,7 +689,7 @@ class DetailedExplanationPlugin(MaiBotPlugin):
         if mode == "always":
             return True
         if mode == "random":
-            return random.random() < activation.activation_probability
+            return random.random() < self.config.detailed_explanation.activation_probability
         if mode != "keyword":
             return False
 

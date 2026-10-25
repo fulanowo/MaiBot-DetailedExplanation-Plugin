@@ -3,11 +3,6 @@
 只依赖 segmentation.py 的纯函数，不需要插件运行时或 SDK。
 """
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from segmentation import split_content_into_segments
 
 

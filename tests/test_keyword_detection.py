@@ -3,11 +3,6 @@
 只依赖 keyword_rules.py 的纯函数，不需要插件运行时或 SDK。
 """
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from keyword_rules import match_keyword_prompt
 
 RULES = [

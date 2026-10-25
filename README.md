@@ -29,7 +29,7 @@
 | `llm_judge` | 默认。只由模型决定是否调用 `detailed_explanation` 工具 |
 | `keyword` | 消息命中关键词时自动触发（内置 16 个 + `custom_keywords`） |
 | `always` | 每条普通消息都触发（仅调试用） |
-| `random` | 按 `activation_probability` 概率触发 |
+| `random` | 按 `[detailed_explanation].activation_probability` 概率触发 |
 | `never` | 只保留手动命令与工具调用 |
 
 内置触发关键词：`详细 / 科普 / 解释 / 说明 / 原理 / 深入 / 具体 / 详细说说 / 展开讲讲 / 多讲讲 / 详细介绍 / 深入分析 / 详细阐述 / 深度解析 / 请详细 / 请展开`。
@@ -93,11 +93,11 @@
 - `send_delay`：段间发送间隔秒数（默认 `1.5`）
 - `show_progress`：是否加 `(1/3)` 进度前缀（默认 `true`）
 - `show_start_hint` / `start_hint_message`：是否先发开场提示，及其文案
+- `activation_probability`：`random` 模式的触发概率（默认 `0.1`）
 
 ### `[activation]`
 
 - `activation_mode`：`llm_judge | keyword | always | random | never`（默认 `llm_judge`）
-- `activation_probability`：`random` 模式的触发概率（默认 `0.1`）
 - `strict_mode`：关键词匹配是否区分大小写（默认 `false`）
 - `custom_keywords`：追加的触发关键词
 
@@ -107,7 +107,7 @@
 - `extra_prompt`：追加到结构化要求末尾的额外指令
 - `generation_timeout`：单次生成等待上限秒数，扩写同样适用（默认 `120`）
 - `enable_search`：是否启用联网增强（默认 `false`）
-- `search_mode`：`auto | always | never`（默认 `auto`）
+- `search_mode`：`auto | always | never`（默认 `auto`）；`auto` 只在问题含时效/知识性线索（如「最新」「为什么」「如何」）时检索，`always` 每次都检索
 - `search_api_names`：要调用的插件 API 全名列表，按顺序尝试（默认空）
 - `search_timeout`：单次检索等待上限秒数（默认 `20`）
 
@@ -165,7 +165,7 @@ MaiBot 1.x 的联网检索由主程序提供：在 `model_config.toml` 里启用
 
 ```bash
 # 纯函数单测（不依赖 MaiBot 运行时）
-python -m pytest tests/test_segmentation.py test_keyword_detection.py -q
+python -m pytest tests -q
 ```
 
 代码结构：
@@ -176,7 +176,7 @@ python -m pytest tests/test_segmentation.py test_keyword_detection.py -q
 | `segmentation.py` | 分段算法纯函数 |
 | `keyword_rules.py` | 关键词 → 领域 Prompt 匹配纯函数 |
 | `tests/test_segmentation.py` | 分段算法测试 |
-| `test_keyword_detection.py` | 关键词规则测试 |
+| `tests/test_keyword_detection.py` | 关键词规则测试 |
 
 约定：
 
