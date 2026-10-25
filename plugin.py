@@ -1,7 +1,7 @@
 """麦麦细说插件 (Detailed Explanation Plugin)。
 
-MaiBot 1.x（maibot_sdk）适配版：用户需要长文解释时直连模型生成结构化长文，
-再按段落智能切分、逐段发送，同时保留麦麦的人设与表达风格。
+MaiBot 1.x（maibot_sdk）适配版：用户需要长文解释时直接调用模型写结构化长文，
+再按段落切开、逐段发送，同时保留麦麦的人设与表达风格。
 """
 
 from __future__ import annotations
@@ -107,14 +107,14 @@ class DetailedExplanationSection(PluginConfigBase):
     enable: bool = Field(default=True, description="是否启用详细解释功能")
     max_total_length: int = Field(default=3000, ge=200, description="长文最大字符数，超出部分截断")
     min_total_length: int = Field(default=200, ge=0, description="长文最小字符数，不足时自动扩写，最多两次")
-    segment_length: int = Field(default=400, ge=50, description="单段目标字符数")
-    min_segments: int = Field(default=1, ge=1, description="最少分段数，低于此值则整段发送")
-    max_segments: int = Field(default=4, ge=1, description="最多分段数，超出的段会合并到最后一段")
+    segment_length: int = Field(default=400, ge=50, description="每段的目标字符数")
+    min_segments: int = Field(default=1, ge=1, description="分段数下限。切出的段数少于这个值就整篇一次发出")
+    max_segments: int = Field(default=4, ge=1, description="分段数上限。多出的段并进最后一段")
     send_delay: float = Field(default=1.5, ge=0.0, description="分段之间发送间隔（秒）")
     show_progress: bool = Field(default=True, description="分段消息是否带 (1/3) 形式的进度前缀")
     show_start_hint: bool = Field(default=True, description="生成前是否先发一条开场提示")
     start_hint_message: str = Field(default="让我详细说明一下...", description="开场提示文案")
-    activation_probability: float = Field(default=0.1, ge=0.0, le=1.0, description="random 模式的触发概率")
+    activation_probability: float = Field(default=0.1, ge=0.0, le=1.0, description="random 模式下每条消息的触发概率")
 
 
 class ActivationSection(PluginConfigBase):
@@ -126,7 +126,7 @@ class ActivationSection(PluginConfigBase):
 
     activation_mode: Literal["llm_judge", "keyword", "always", "random", "never"] = Field(
         default="llm_judge",
-        description="llm_judge=由模型决定是否调用工具；keyword=命中关键词直接触发；always=每条消息触发；random=按概率触发；never=只保留手动命令",
+        description="llm_judge=由模型决定是否调用工具。keyword=命中关键词直接触发。always=每条消息都触发。random=按概率触发。never=只保留手动命令",
     )
     strict_mode: bool = Field(default=False, description="关键词匹配是否区分大小写")
     custom_keywords: list[str] = Field(default_factory=list, description="追加的触发关键词")
@@ -145,11 +145,11 @@ class ContentGenerationSection(PluginConfigBase):
     enable_search: bool = Field(default=False, description="是否通过其他插件公开的 API 做联网检索增强")
     search_mode: Literal["auto", "always", "never"] = Field(
         default="auto",
-        description="auto=按时效性启发式触发；always=每次生成前都检索；never=从不检索",
+        description="auto=问题出现时效或具体信息线索时才检索，如「最新」「如何」。always=每次生成前都检索。never=从不检索",
     )
     search_api_names: list[str] = Field(
         default_factory=list,
-        description="联网检索调用的插件 API 全名，按顺序尝试，例如 search_plugin.web_search；被调用的 API 需接受 query 参数",
+        description="联网检索调用的插件 API 全名，按顺序尝试，例如 search_plugin.web_search。被调用的 API 需接受 query 参数",
     )
     search_timeout: float = Field(default=20.0, gt=0.0, description="单次联网检索的等待上限（秒）")
 
@@ -163,14 +163,14 @@ class SegmentationSection(PluginConfigBase):
 
     algorithm: Literal["smart", "sentence", "length"] = Field(
         default="smart",
-        description="smart=保持段落完整并超长段落按句切；sentence=按句装段；length=按字符数硬切",
+        description="smart=保持段落完整，超长段落再按句切。sentence=按句装段。length=按字符数硬切",
     )
     sentence_separators: list[str] = Field(
         default_factory=lambda: list(DEFAULT_SENTENCE_SEPARATORS),
         description="句末标点集合",
     )
     keep_paragraph_integrity: bool = Field(default=True, description="分段时是否保持段落完整，不跨段切开")
-    min_paragraph_length: int = Field(default=50, ge=0, description="段落合并阈值，低于该长度的段落并入后一段")
+    min_paragraph_length: int = Field(default=50, ge=0, description="短于这个长度的段落并入下一段")
 
 
 class KeywordPromptRule(PluginConfigBase):
@@ -253,7 +253,7 @@ class KeywordPromptsSection(PluginConfigBase):
     case_sensitive: bool = Field(default=False, description="关键词匹配是否区分大小写")
     match_strategy: Literal["first", "highest", "merge"] = Field(
         default="highest",
-        description="first=取第一个命中；highest=取优先级最高；merge=合并全部命中的规则",
+        description="first=取第一个命中的规则。highest=取优先级最高的规则。merge=合并全部命中的规则",
     )
     rules: list[KeywordPromptRule] = Field(
         default_factory=_default_keyword_rules,
@@ -271,9 +271,9 @@ class ConversationContextSection(PluginConfigBase):
     enable: bool = Field(default=True, description="生成前是否摘录最近的对话作为上下文")
     scope: Literal["chat", "user"] = Field(
         default="chat",
-        description="chat=取整段会话；user=只取当前用户与机器人的消息，群聊里可减少噪声",
+        description="chat=取整段会话。user=只取当前用户和机器人的消息，群聊里噪声更少",
     )
-    max_messages: int = Field(default=12, ge=0, description="最多带入的历史消息条数，0 表示不带上下文")
+    max_messages: int = Field(default=12, ge=0, description="最多带几条历史消息，0 表示不带上下文")
     time_window_seconds: int = Field(default=1800, ge=0, description="回看的时间窗口（秒）")
     max_chars: int = Field(default=1200, ge=200, description="上下文最大字符数")
     per_message_max_chars: int = Field(default=240, ge=50, description="单条历史消息最大字符数，超出截断")
