@@ -114,3 +114,10 @@ dmypy.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# 插件运行时配置（由 MaiBot 在首次加载时生成，含用户自定义内容）
+/config.toml
+config.toml.backup.*
+
+# 插件运行日志（脱离宿主单独运行时可能生成）
+/logs/

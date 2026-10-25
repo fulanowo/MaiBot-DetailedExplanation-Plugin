@@ -1,6 +1,32 @@
 # 更新日志 (Changelog)
 
+## [2.0.0] - 2026-10-26
+
+### 破坏性变更 (Breaking)
+- 适配 MaiBot 1.x 的 Host/Runner 插件体系（`maibot-plugin-sdk` 2.8.1+），不再是 0.x 的 `src.plugin_system` 插件
+- `_manifest.json` 升级到 Manifest v2：新增 `id` / `sdk` / `capabilities` / `i18n`，仓库链接改为 `fulanowo/MaiBot-DetailedExplanation-Plugin`
+- 配置模型改为 `PluginConfigBase`，由 WebUI 渲染；`config.toml` 改为运行时生成并加入 `.gitignore`
+- 删除 `FEATURE_IMPLEMENTATION.md`（描述的是已移除的 0.x 内部实现）
+
+### 变更 (Changed)
+- `Action`（`LLM_JUDGE`）+ 独立 `Tool` 合并为单个 `@Tool("detailed_explanation")`，SDK 已把 Action 归一为 Tool
+- 关键词/概率触发改由挂在 `chat.receive.after_process` 的 `@HookHandler` 实现，命中后在后台生成并中止本轮回复
+- 命令组件改用 `@Command(pattern=...)`，topic 从 `matched_groups` 取，返回值改为 `(success, response, intercept)`
+- 人设读取改为 `ctx.config.get("bot.nickname" / "bot.alias_names" / "personality.*")`
+- `activation_mode` 去掉 `mixed`，新增 `never`
+- `conversation_context` 去掉 `max_intercept_level`（1.x 无该过滤层级）
+- `content_generation` 去掉 `enable_tools` / `enable_chinese_typo`，`search_tool_names` 改为 `search_api_names`
+
+### 移除 (Removed)
+- `mood_manager` 情绪注入（1.x 已移除 mood 模块）
+
+### 新增 (Added)
+- `on_load` / `on_unload` / `on_config_update` 生命周期实现，卸载时取消全部后台任务
+- 模型任务校验：`model_task` 不在宿主可用任务列表中时记录明确错误，不再静默回退
+- 纯函数模块 `segmentation.py` / `keyword_rules.py`，测试不再 stub `src.*`
+
 ## [1.4.2] - 2025-12-23
+
 
 ### 修复 (Fixed)
 - 适配 MaiBot 0.12+：`mood` 模块移除后不再导致插件加载失败（`No module named 'src.mood'`）
