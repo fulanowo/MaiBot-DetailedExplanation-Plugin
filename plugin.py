@@ -782,7 +782,7 @@ class DetailedExplanationPlugin(MaiBotPlugin):
                 text,
                 stream_id,
                 set_reply=first_quotes_message and index == 0,
-                typing=index > 0,
+                typing=False,
             )
             if not sent:
                 self.ctx.logger.warning("第 %d/%d 段发送失败", index + 1, total)
